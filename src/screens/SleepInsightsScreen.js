@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { colors } from '../theme';
 
 export default function SleepInsightsScreen() {
   return (
@@ -15,9 +16,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.background,
   },
   header: {
     fontSize: 24,
     marginBottom: 16,
+    color: colors.primary,
   },
 });
