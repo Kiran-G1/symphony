@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "symphony",
+    "slug": "symphony",
+    "version": "1.0.0",
+    "sdkVersion": "53.0.0",
+    "assetBundlePatterns": ["**/*"],
+    "orientation": "portrait",
+    "platforms": ["ios", "android", "web"]
+  }
+}
