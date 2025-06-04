@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { colors } from '../theme';
 import { useDispatch } from 'react-redux';
 import { addMoodEntry } from '../store/moodSlice';
 
@@ -21,7 +22,7 @@ export default function MoodJournalScreen() {
         value={value}
         onChangeText={setValue}
       />
-      <Button title="Save" onPress={submit} />
+      <Button title="Save" color={colors.primary} onPress={submit} />
     </View>
   );
 }
@@ -30,15 +31,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    backgroundColor: colors.background,
   },
   header: {
     fontSize: 24,
     marginBottom: 16,
+    color: colors.primary,
   },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
     padding: 8,
     marginBottom: 16,
+    backgroundColor: '#fff',
+    borderRadius: 4,
   },
 });
