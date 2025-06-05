@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  FlatList,
+  SectionList,
   Text,
   TouchableOpacity,
   StyleSheet,
   TextInput,
   Button,
+  Switch,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { colors } from '../theme';
 import { useSelector, useDispatch } from 'react-redux';
 import { addTask, toggleTask, startTask, stopTask } from '../store/tasksSlice';
@@ -17,8 +19,12 @@ export default function TaskListScreen() {
   const dispatch = useDispatch();
 
   const [title, setTitle] = useState('');
-  const [due, setDue] = useState('');
+  const [due, setDue] = useState(new Date());
+  const [showPicker, setShowPicker] = useState(false);
   const [urgency, setUrgency] = useState('');
+  const [urgent, setUrgent] = useState(false);
+  const [important, setImportant] = useState(false);
+  const [priorityFilter, setPriorityFilter] = useState(null);
 
   const submit = () => {
     if (!title) return;
@@ -26,16 +32,20 @@ export default function TaskListScreen() {
       addTask({
         id: Date.now().toString(),
         title,
-        due,
+        due: due.toISOString(),
         urgency,
+        urgent,
+        important,
         completed: false,
         startedAt: null,
         timeSpent: 0,
       })
     );
     setTitle('');
-    setDue('');
+    setDue(new Date());
     setUrgency('');
+    setUrgent(false);
+    setImportant(false);
   };
 
   const TaskItem = ({ item }) => {
@@ -73,7 +83,11 @@ export default function TaskListScreen() {
           onPress={() => dispatch(toggleTask(item.id))}
         >
           <Text style={item.completed ? styles.done : styles.item}>{item.title}</Text>
-          <Text style={styles.meta}>{item.due} | urgency: {item.urgency}</Text>
+          <Text style={styles.meta}>
+            {item.due ? new Date(item.due).toLocaleString() : 'N/A'} | urgency:{' '}
+            {item.urgency} |{item.urgent ? ' urgent' : ''}
+            {item.important ? ', important' : ''}
+          </Text>
           {isRunning && (
             <Text style={styles.timer}>Pomodoro {format(remaining)}</Text>
           )}
@@ -90,6 +104,74 @@ export default function TaskListScreen() {
     );
   };
 
+  const isToday = d => {
+    const t = new Date();
+    return (
+      d.getDate() === t.getDate() &&
+      d.getMonth() === t.getMonth() &&
+      d.getFullYear() === t.getFullYear()
+    );
+  };
+  const isYesterday = d => {
+    const t = new Date();
+    t.setDate(t.getDate() - 1);
+    return (
+      d.getDate() === t.getDate() &&
+      d.getMonth() === t.getMonth() &&
+      d.getFullYear() === t.getFullYear()
+    );
+  };
+  const isTomorrow = d => {
+    const t = new Date();
+    t.setDate(t.getDate() + 1);
+    return (
+      d.getDate() === t.getDate() &&
+      d.getMonth() === t.getMonth() &&
+      d.getFullYear() === t.getFullYear()
+    );
+  };
+  const isThisMonth = d => {
+    const t = new Date();
+    return d.getMonth() === t.getMonth() && d.getFullYear() === t.getFullYear();
+  };
+  const isThisYear = d => {
+    const t = new Date();
+    return d.getFullYear() === t.getFullYear();
+  };
+
+  const sections = [
+    { title: 'Today', data: [] },
+    { title: 'Yesterday', data: [] },
+    { title: 'Tomorrow', data: [] },
+    { title: 'This Month', data: [] },
+    { title: 'This Year', data: [] },
+  ];
+
+  tasks.forEach(t => {
+    const d = t.due ? new Date(t.due) : null;
+    if (!d) return;
+    if (isToday(d)) sections[0].data.push(t);
+    else if (isYesterday(d)) sections[1].data.push(t);
+    else if (isTomorrow(d)) sections[2].data.push(t);
+    else if (isThisMonth(d)) sections[3].data.push(t);
+    else if (isThisYear(d)) sections[4].data.push(t);
+  });
+
+  const filterByPriority = t => {
+    if (!priorityFilter) return true;
+    const map = {
+      UI: t.urgent && t.important,
+      UN: t.urgent && !t.important,
+      NI: !t.urgent && t.important,
+      NN: !t.urgent && !t.important,
+    };
+    return map[priorityFilter];
+  };
+
+  sections.forEach(sec => {
+    sec.data = sec.data.filter(filterByPriority);
+  });
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Tasks</Text>
@@ -99,23 +181,70 @@ export default function TaskListScreen() {
         value={title}
         onChangeText={setTitle}
       />
-      <TextInput
+      <TouchableOpacity
         style={styles.input}
-        placeholder="Due (YYYY-MM-DD HH:MM)"
-        value={due}
-        onChangeText={setDue}
-      />
+        onPress={() => setShowPicker(true)}
+      >
+        <Text>{due.toLocaleString()}</Text>
+      </TouchableOpacity>
+      {showPicker && (
+        <DateTimePicker
+          value={due}
+          mode="datetime"
+          onChange={(e, date) => {
+            setShowPicker(false);
+            if (date) setDue(date);
+          }}
+        />
+      )}
       <TextInput
         style={styles.input}
         placeholder="Urgency 1-5"
         value={urgency}
         onChangeText={setUrgency}
       />
-      <Button title="Add Task" color={colors.primary} onPress={submit} />
-      <FlatList
-        data={tasks}
+      <View style={styles.switchRow}>
+        <Text style={styles.switchLabel}>Urgent</Text>
+        <Switch value={urgent} onValueChange={setUrgent} />
+        <Text style={[styles.switchLabel, { marginLeft: 16 }]}>Important</Text>
+        <Switch value={important} onValueChange={setImportant} />
+      </View>
+      <View style={styles.filterRow}>
+        {[
+          ['UI', 'Urgent & Important'],
+          ['UN', 'Urgent & Non-Important'],
+          ['NI', 'Non-Urgent & Important'],
+          ['NN', 'Non-Urgent & Non-Important'],
+        ].map(([key, label]) => (
+          <TouchableOpacity
+            key={key}
+            style={[
+              styles.filterBtn,
+              priorityFilter === key && styles.filterBtnActive,
+            ]}
+            onPress={() =>
+              setPriorityFilter(priorityFilter === key ? null : key)
+            }
+          >
+            <Text
+              style={
+                priorityFilter === key
+                  ? styles.filterTextActive
+                  : styles.filterText
+              }
+            >
+              {label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      <SectionList
+        sections={sections}
         keyExtractor={item => item.id}
         renderItem={({ item }) => <TaskItem item={item} />}
+        renderSectionHeader={({ section: { title } }) => (
+          <Text style={styles.sectionHeader}>{title}</Text>
+        )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
     </View>
@@ -140,10 +269,10 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: colors.border,
     padding: 8,
     marginBottom: 8,
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderRadius: 4,
   },
   meta: {
@@ -170,6 +299,49 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 1,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: colors.border,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  switchLabel: {
+    fontSize: 14,
+    color: colors.text,
+    marginRight: 4,
+  },
+  filterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 8,
+  },
+  filterBtn: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  filterBtnActive: {
+    backgroundColor: colors.primary,
+  },
+  filterText: {
+    color: colors.text,
+    fontSize: 12,
+  },
+  filterTextActive: {
+    color: '#fff',
+    fontSize: 12,
+  },
+  sectionHeader: {
+    backgroundColor: colors.card,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary,
   },
 });
