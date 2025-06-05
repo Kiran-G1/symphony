@@ -23,3 +23,13 @@ npm start
 ```
 
 The project expects an `assets` directory at the root. A placeholder `.keep` file is committed so the folder exists even if you do not have custom images yet.
+
+## Troubleshooting
+
+### "non-std C++ exception" on iOS
+
+If the application unexpectedly terminates with a stack trace referencing
+`RCTFatal` or `RCMessageThread`, it usually means a JavaScript error reached the
+native layer unhandled. Ensure runtime errors are handled by React components
+and that all dependencies are installed. A global handler in `index.js` logs any
+uncaught exceptions to aid debugging.
