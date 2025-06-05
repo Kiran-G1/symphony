@@ -15,7 +15,9 @@ export default function HomeScreen() {
       <View style={styles.card}>
         <Text style={styles.cardLabel}>Next Task</Text>
         <Text style={styles.cardValue}>
-          {nextTask ? nextTask.title : 'All done!'}
+          {nextTask
+            ? `${nextTask.title} (due ${nextTask.due || 'N/A'})`
+            : 'All done!'}
         </Text>
       </View>
       <View style={styles.card}>

@@ -4,6 +4,8 @@ A productivity and wellness app integrating task management, mood tracking, and 
 
 ## Features
 - Manage tasks with priorities and completion state.
+- Add tasks with a due time and urgency level.
+- Start tasks with a built‑in Pomodoro timer that logs the time spent.
 - Log daily moods in the journal.
 - View a dashboard with your next task and latest mood.
 - Placeholder screens for sleep insights and settings.
