@@ -9,6 +9,7 @@ import {
   Button,
   Switch,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { colors } from '../theme';
 import { useSelector, useDispatch } from 'react-redux';
@@ -83,11 +84,30 @@ export default function TaskListScreen() {
           onPress={() => dispatch(toggleTask(item.id))}
         >
           <Text style={item.completed ? styles.done : styles.item}>{item.title}</Text>
-          <Text style={styles.meta}>
-            {item.due ? new Date(item.due).toLocaleString() : 'N/A'} | urgency:{' '}
-            {item.urgency} |{item.urgent ? ' urgent' : ''}
-            {item.important ? ', important' : ''}
-          </Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.meta}>
+              {item.due ? new Date(item.due).toLocaleString() : 'N/A'} | urgency:{' '}
+              {item.urgency}
+            </Text>
+            <View style={styles.iconRow}>
+              {item.urgent && (
+                <Ionicons
+                  name="alert-circle"
+                  size={12}
+                  color="red"
+                  style={styles.icon}
+                />
+              )}
+              {item.important && (
+                <Ionicons
+                  name="star"
+                  size={12}
+                  color="orange"
+                  style={styles.icon}
+                />
+              )}
+            </View>
+          </View>
           {isRunning && (
             <Text style={styles.timer}>Pomodoro {format(remaining)}</Text>
           )}
@@ -104,58 +124,44 @@ export default function TaskListScreen() {
     );
   };
 
-  const isToday = d => {
-    const t = new Date();
-    return (
-      d.getDate() === t.getDate() &&
-      d.getMonth() === t.getMonth() &&
-      d.getFullYear() === t.getFullYear()
-    );
-  };
-  const isYesterday = d => {
-    const t = new Date();
-    t.setDate(t.getDate() - 1);
-    return (
-      d.getDate() === t.getDate() &&
-      d.getMonth() === t.getMonth() &&
-      d.getFullYear() === t.getFullYear()
-    );
-  };
-  const isTomorrow = d => {
-    const t = new Date();
-    t.setDate(t.getDate() + 1);
-    return (
-      d.getDate() === t.getDate() &&
-      d.getMonth() === t.getMonth() &&
-      d.getFullYear() === t.getFullYear()
-    );
-  };
-  const isThisMonth = d => {
-    const t = new Date();
-    return d.getMonth() === t.getMonth() && d.getFullYear() === t.getFullYear();
-  };
-  const isThisYear = d => {
-    const t = new Date();
-    return d.getFullYear() === t.getFullYear();
+  const startOfDay = offset => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + offset);
+    return d;
   };
 
-  const sections = [
-    { title: 'Today', data: [] },
-    { title: 'Yesterday', data: [] },
-    { title: 'Tomorrow', data: [] },
-    { title: 'This Month', data: [] },
-    { title: 'This Year', data: [] },
-  ];
+  const today = startOfDay(0);
+  const tomorrow = startOfDay(1);
+  const dayAfterTomorrow = startOfDay(2);
+
+  const overdueTasks = [];
+  const todayTasks = [];
+  const tomorrowTasks = [];
+  const upcomingMap = {};
 
   tasks.forEach(t => {
     const d = t.due ? new Date(t.due) : null;
     if (!d) return;
-    if (isToday(d)) sections[0].data.push(t);
-    else if (isYesterday(d)) sections[1].data.push(t);
-    else if (isTomorrow(d)) sections[2].data.push(t);
-    else if (isThisMonth(d)) sections[3].data.push(t);
-    else if (isThisYear(d)) sections[4].data.push(t);
+    if (d < today) overdueTasks.push(t);
+    else if (d >= today && d < tomorrow) todayTasks.push(t);
+    else if (d >= tomorrow && d < dayAfterTomorrow) tomorrowTasks.push(t);
+    else {
+      const key = d.toDateString();
+      if (!upcomingMap[key]) upcomingMap[key] = [];
+      upcomingMap[key].push(t);
+    }
   });
+
+  const sections = [];
+  if (overdueTasks.length) sections.push({ title: 'Overdue', data: overdueTasks });
+  if (todayTasks.length) sections.push({ title: 'Today', data: todayTasks });
+  if (tomorrowTasks.length) sections.push({ title: 'Tomorrow', data: tomorrowTasks });
+  Object.keys(upcomingMap)
+    .sort((a, b) => new Date(a) - new Date(b))
+    .forEach(key => {
+      sections.push({ title: key, data: upcomingMap[key] });
+    });
 
   const filterByPriority = t => {
     if (!priorityFilter) return true;
@@ -238,6 +244,7 @@ export default function TaskListScreen() {
           </TouchableOpacity>
         ))}
       </View>
+      <Button title="Add Task" onPress={submit} />
       <SectionList
         sections={sections}
         keyExtractor={item => item.id}
@@ -278,6 +285,17 @@ const styles = StyleSheet.create({
   meta: {
     color: '#666',
     fontSize: 12,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconRow: {
+    flexDirection: 'row',
+    marginLeft: 4,
+  },
+  icon: {
+    marginLeft: 2,
   },
   timer: {
     fontSize: 12,
