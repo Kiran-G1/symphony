@@ -8,7 +8,7 @@ A productivity and wellness app integrating task management, mood tracking, and 
 - Add tasks with a due time and urgency level.
 - Interactive date picker for choosing due dates.
 - Group tasks by due date (Today, Yesterday, Tomorrow, This Month, This Year).
-- Filter tasks using a priority matrix of urgency and importance.
+- Mark tasks as urgent or important with simple toggles.
 - Start tasks with a built‑in Pomodoro timer that logs the time spent.
 - Log daily moods in the journal.
 - View a dashboard with your next task and latest mood.

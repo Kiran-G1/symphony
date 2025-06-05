@@ -25,7 +25,6 @@ export default function TaskListScreen() {
   const [urgency, setUrgency] = useState('');
   const [urgent, setUrgent] = useState(false);
   const [important, setImportant] = useState(false);
-  const [priorityFilter, setPriorityFilter] = useState(null);
 
   const submit = () => {
     if (!title) return;
@@ -163,20 +162,7 @@ export default function TaskListScreen() {
       sections.push({ title: key, data: upcomingMap[key] });
     });
 
-  const filterByPriority = t => {
-    if (!priorityFilter) return true;
-    const map = {
-      UI: t.urgent && t.important,
-      UN: t.urgent && !t.important,
-      NI: !t.urgent && t.important,
-      NN: !t.urgent && !t.important,
-    };
-    return map[priorityFilter];
-  };
-
-  sections.forEach(sec => {
-    sec.data = sec.data.filter(filterByPriority);
-  });
+  // Sections already filtered by due date; priority matrix filter removed
 
   return (
     <View style={styles.container}>
@@ -214,35 +200,6 @@ export default function TaskListScreen() {
         <Switch value={urgent} onValueChange={setUrgent} />
         <Text style={[styles.switchLabel, { marginLeft: 16 }]}>Important</Text>
         <Switch value={important} onValueChange={setImportant} />
-      </View>
-      <View style={styles.filterRow}>
-        {[
-          ['UI', 'Urgent & Important'],
-          ['UN', 'Urgent & Non-Important'],
-          ['NI', 'Non-Urgent & Important'],
-          ['NN', 'Non-Urgent & Non-Important'],
-        ].map(([key, label]) => (
-          <TouchableOpacity
-            key={key}
-            style={[
-              styles.filterBtn,
-              priorityFilter === key && styles.filterBtnActive,
-            ]}
-            onPress={() =>
-              setPriorityFilter(priorityFilter === key ? null : key)
-            }
-          >
-            <Text
-              style={
-                priorityFilter === key
-                  ? styles.filterTextActive
-                  : styles.filterText
-              }
-            >
-              {label}
-            </Text>
-          </TouchableOpacity>
-        ))}
       </View>
       <Button title="Add Task" onPress={submit} />
       <SectionList
@@ -328,31 +285,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text,
     marginRight: 4,
-  },
-  filterRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 8,
-  },
-  filterBtn: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  filterBtnActive: {
-    backgroundColor: colors.primary,
-  },
-  filterText: {
-    color: colors.text,
-    fontSize: 12,
-  },
-  filterTextActive: {
-    color: '#fff',
-    fontSize: 12,
   },
   sectionHeader: {
     backgroundColor: colors.card,
