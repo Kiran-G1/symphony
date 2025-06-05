@@ -1,5 +1,7 @@
 export const colors = {
-  primary: '#6200ee',
-  background: '#f5f5f5',
-  text: '#333',
+  primary: '#1e88e5',
+  background: '#fafafa',
+  text: '#212121',
+  card: '#ffffff',
+  border: '#e0e0e0',
 };

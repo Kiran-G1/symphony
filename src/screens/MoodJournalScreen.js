@@ -37,13 +37,14 @@ const styles = StyleSheet.create({
     fontSize: 24,
     marginBottom: 16,
     color: colors.primary,
+    fontWeight: '600',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: colors.border,
     padding: 8,
     marginBottom: 16,
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderRadius: 4,
   },
 });

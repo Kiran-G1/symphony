@@ -16,7 +16,9 @@ export default function HomeScreen() {
         <Text style={styles.cardLabel}>Next Task</Text>
         <Text style={styles.cardValue}>
           {nextTask
-            ? `${nextTask.title} (due ${nextTask.due || 'N/A'})`
+            ? `${nextTask.title} (due ${
+                nextTask.due ? new Date(nextTask.due).toLocaleString() : 'N/A'
+              })`
             : 'All done!'}
         </Text>
       </View>
@@ -42,18 +44,19 @@ const styles = StyleSheet.create({
     fontSize: 28,
     marginBottom: 24,
     color: colors.primary,
+    fontWeight: '600',
   },
   card: {
     width: '100%',
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderRadius: 8,
     padding: 16,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 3,
+    elevation: 1,
   },
   cardLabel: {
     fontSize: 16,
